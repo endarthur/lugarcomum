@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Lugar Comum</title>
+<meta name="description" content="O jogo de ser óbvio — party game offline onde o objetivo é dar a resposta mais previsível.">
+<meta property="og:title" content="Lugar Comum">
+<meta property="og:description" content="O jogo de ser óbvio">
+<meta property="og:image" content="card.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Lugar Comum">
+<meta name="twitter:description" content="O jogo de ser óbvio">
+<meta name="twitter:image" content="card.png">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230e1012'/><text x='16' y='22' font-size='18' text-anchor='middle' fill='%23c08028'>LC</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0e1012;
+  --surface: #181a1c;
+  --card: #24262a;
+  --accent: #c08028;
+  --accent-dim: #8a6018;
+  --accent-glow: rgba(192,128,40,0.15);
+  --cool: #5090b0;
+  --cool-dim: #306880;
+  --cool-glow: rgba(80,144,176,0.12);
+  --text: #d0d4da;
+  --text-dim: #b0b4ba;
+  --text-muted: #808488;
+  --danger: #d45050;
+  --danger-dim: #b83838;
+  --success: #80b868;
+  --border: #2e3034;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'DM Sans', 'Segoe UI', sans-serif;
+  --font-mono: 'DM Mono', 'Courier New', monospace;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 0.4rem;
+  display: block;
+}
+
+.hint {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+}
+
+input[type="text"], textarea {
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+input[type="text"]:focus, textarea:focus { border-color: var(--cool-dim); }
+input[type="text"]::placeholder, textarea::placeholder { color: var(--text-muted); }
+
+textarea {
+  resize: vertical;
+  min-height: 5rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(--accent); color: var(--bg); }
+.btn-ghost { background: transparent; color: var(--text-dim); border: 1px solid var(--border); }
+.btn-danger { background: var(--danger-dim); color: var(--text); }
+.btn-small { background: var(--surface); color: var(--text-dim); padding: 0.5rem 1rem; font-size: 0.85rem; border: 1px solid var(--border); }
+.btn-full { width: 100%; }
+.btn[disabled] { opacity: 0.35; cursor: default; }
+
+.title {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-align: center;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.subtitle {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+.divider { height: 1px; background: var(--border); margin: 0.25rem 0; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
+
+.chip {
+  padding: 0.45rem 0.9rem;
+  border-radius: 20px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.chip.active { border-color: var(--cool); background: var(--cool-glow); color: var(--cool); }
+
+.screen { display: none; flex-direction: column; gap: 1.25rem; }
+.screen.active { display: flex; }
+
+.question-text {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+  line-height: 1.3;
+  min-height: 3.2rem;
+}
+
+.round-badge {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--cool-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  text-align: center;
+}
+
+.answer-display {
+  font-family: var(--font-body);
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-align: center;
+  padding: 1rem;
+  background: var(--accent-glow);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  word-break: break-word;
+}
+
+.penalty-big {
+  font-family: var(--font-display);
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-align: center;
+  line-height: 1;
+}
+
+.penalty-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  text-align: center;
+}
+
+.header { display: flex; justify-content: space-between; align-items: center; }
+.header-name { font-size: 0.95rem; font-weight: 600; }
+.header-round { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); }
+.header-penalty { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; line-height: 1; cursor: pointer; }
+.header-penalty.clean { color: var(--success); }
+.header-penalty.dirty { color: var(--danger); }
+.header-penalty-label { font-family: var(--font-mono); font-size: 0.55rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; text-align: right; }
+
+.lock-icon { font-size: 2.5rem; opacity: 0.6; text-align: center; }
+.lock-text { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.15em; text-align: center; }
+
+.reveal-btns { display: flex; gap: 0.75rem; }
+.reveal-btns .btn { flex: 1; }
+
+.history-item { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; }
+.history-item.majority { border-left: 3px solid var(--success); }
+.history-item.outlier { border-left: 3px solid var(--danger); }
+.history-q { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 0.15rem; }
+.history-a { font-size: 0.95rem; font-weight: 600; }
+.history-mark { font-family: var(--font-mono); font-size: 0.7rem; margin-left: 0.75rem; flex-shrink: 0; }
+.history-mark.majority { color: var(--success); }
+.history-mark.outlier { color: var(--danger); }
+.history-list { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.end-flavor { font-family: var(--font-display); font-size: 1.2rem; text-align: center; margin-bottom: 0.25rem; }
+
+.center { text-align: center; }
+.flex-col { display: flex; flex-direction: column; }
+.gap-1 { gap: 1rem; }
+.gap-075 { gap: 0.75rem; }
+.items-center { align-items: center; }
+.row { display: flex; }
+
+/* Collapsible */
+.collapse-toggle {
+  font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-dim);
+  cursor: pointer; padding: 0.6rem 0; display: flex; align-items: center; gap: 0.4rem;
+  -webkit-tap-highlight-color: transparent;
+}
+.collapse-toggle:hover { color: var(--cool); }
+.collapse-toggle .arrow { transition: transform 0.2s; display: inline-block; font-size: 0.55rem; }
+.collapse-toggle.open .arrow { transform: rotate(90deg); }
+.collapse-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+.collapse-body.open { max-height: 600px; }
+
+.instructions-toggle {
+  font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-dim);
+  text-align: center; cursor: pointer; padding: 0.9rem 0.5rem;
+  display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+  -webkit-tap-highlight-color: transparent;
+}
+.instructions-toggle:hover { color: var(--cool); }
+.instructions-toggle .arrow { transition: transform 0.2s; display: inline-block; font-size: 0.6rem; }
+.instructions-toggle.open .arrow { transform: rotate(90deg); }
+.instructions-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+.instructions-body.open { max-height: 500px; }
+.instructions-content { font-family: var(--font-body); font-size: 0.85rem; color: var(--text-dim); line-height: 1.6; padding: 0 1.25rem 1.25rem; }
+.instructions-content strong { color: var(--text); font-weight: 600; }
+.step-num { display: inline-flex; align-items: center; justify-content: center; width: 1.3rem; height: 1.3rem; border-radius: 50%; background: var(--cool-glow); color: var(--cool); font-family: var(--font-mono); font-size: 0.65rem; font-weight: 600; margin-right: 0.35rem; flex-shrink: 0; vertical-align: middle; }
+.step-row { margin-bottom: 0.5rem; }
+
+.seed-row { display: flex; gap: 0.5rem; align-items: center; }
+.seed-row input { flex: 1; min-width: 0; }
+.btn-icon { width: 2.65rem; height: 2.65rem; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; font-size: 1.1rem; cursor: pointer; transition: border-color 0.15s, background 0.15s; -webkit-tap-highlight-color: transparent; }
+.btn-icon:active { background: var(--card); }
+
+.cat-chip-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+.cat-chip { padding: 0.35rem 0.7rem; border-radius: 16px; font-family: var(--font-mono); font-size: 0.65rem; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--text-muted); transition: all 0.15s; -webkit-tap-highlight-color: transparent; text-transform: uppercase; letter-spacing: 0.05em; }
+.cat-chip.active { border-color: var(--cool); background: var(--cool-glow); color: var(--cool); }
+.prompt-count { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); text-align: center; margin-top: 0.5rem; }
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+}
+.footer-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: color 0.15s;
+}
+.footer-link:hover { color: var(--cool); }
+.footer-sep { color: var(--border); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="screen-setup" class="screen active">
+    <div style="text-align:center; padding:1.5rem 0 0.5rem">
+      <h1 class="title">Lugar Comum</h1>
+      <p class="subtitle">o jogo de ser óbvio</p>
+    </div>
+    <div class="card" style="padding:0">
+      <div class="instructions-toggle" id="instructions-toggle">
+        <span class="arrow">▶</span> Como jogar?
+      </div>
+      <div class="instructions-body" id="instructions-body">
+        <div class="instructions-content">
+          <div class="step-row"><span class="step-num">1</span> Todos usam a <strong>mesma semente</strong> nos seus celulares.</div>
+          <div class="step-row"><span class="step-num">2</span> Uma pergunta aparece — <strong>escreva a resposta que a maioria vai dar</strong>, não a sua opinião pessoal.</div>
+          <div class="step-row"><span class="step-num">3</span> Trave sua resposta e <strong>mostre o 🔒</strong> pra mesa.</div>
+          <div class="step-row"><span class="step-num">4</span> Na contagem de três, todos apertam <strong>revelar</strong> e mostram a tela.</div>
+          <div class="step-row"><span class="step-num">5</span> O grupo decide a maioria. Quem ficou fora marca <strong>✗ Fora</strong> e ganha uma penalidade.</div>
+          <div class="step-row" style="margin-bottom:0"><span class="step-num">★</span> <strong>Menos penalidades ganha.</strong> Ser original aqui é perder.</div>
+          <div class="divider" style="margin:0.75rem 0 0.5rem"></div>
+          <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text-muted);text-align:center">4–8 jogadores · ~15 min · a partir de 10 anos</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <label class="label" for="input-name">Seu nome</label>
+      <input type="text" id="input-name" placeholder="Como te chamam?">
+    </div>
+    <div class="card">
+      <label class="label" for="input-seed">Semente (todos usam a mesma)</label>
+      <div class="seed-row">
+        <input type="text" id="input-seed" placeholder="ex: baleia piano tucano">
+        <button class="btn-icon" id="btn-random-seed" title="Gerar semente">🎲</button>
+        <button class="btn-icon" id="btn-share-seed" title="Compartilhar link">🔗</button>
+      </div>
+      <p class="hint" id="seed-hint">Mesma semente = mesma ordem de perguntas</p>
+    </div>
+    <div class="card">
+      <label class="label">Rodadas</label>
+      <div class="chip-row" id="round-chips"></div>
+    </div>
+    <div class="card">
+      <label class="label">Categorias</label>
+      <div class="cat-chip-row" id="cat-chips"></div>
+      <div class="prompt-count" id="prompt-count"></div>
+      <div class="collapse-toggle" id="custom-toggle">
+        <span class="arrow">▶</span> Perguntas personalizadas
+      </div>
+      <div class="collapse-body" id="custom-body">
+        <textarea id="input-custom" placeholder="Uma pergunta por linha&#10;ex: Melhor música do Chico Buarque"></textarea>
+        <p class="hint">Perguntas extras são misturadas no baralho e compartilhadas no link.</p>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-full" id="btn-start" disabled style="font-size:1.1rem; padding:1rem">Começar</button>
+    <div class="footer">
+      <a href="https://github.com/endarthur/lugarcomum" target="_blank" rel="noopener" class="footer-link">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        endarthur/lugarcomum
+      </a>
+      <span class="footer-sep">·</span>
+      <a href="https://gentropic.org" target="_blank" rel="noopener" class="footer-link">gentropic.org</a>
+    </div>
+  </div>
+
+  <div id="screen-question" class="screen">
+    <div class="header" id="header-question"></div>
+    <div class="card flex-col gap-1 items-center">
+      <div class="round-badge" id="q-round-badge"></div>
+      <div class="question-text" id="q-text"></div>
+      <div class="divider"></div>
+      <input type="text" id="input-answer" placeholder="Sua resposta..." style="text-align:center; font-size:1.1rem">
+      <button class="btn btn-primary btn-full" id="btn-lock" disabled>Travar resposta</button>
+    </div>
+  </div>
+
+  <div id="screen-locked" class="screen">
+    <div class="header" id="header-locked"></div>
+    <div class="card">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.75rem;padding:2rem 1rem">
+        <div class="lock-icon">🔒</div>
+        <div class="lock-text">Resposta travada</div>
+        <div class="hint center">Aguarde todos travarem</div>
+      </div>
+      <div class="divider"></div>
+      <div style="padding:1rem 0 0; text-align:center">
+        <button class="btn btn-primary btn-full" id="btn-reveal">Revelar respostas</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-reveal" class="screen">
+    <div class="header" id="header-reveal"></div>
+    <div class="card flex-col gap-1">
+      <div class="round-badge">Sua resposta</div>
+      <div class="answer-display" id="reveal-answer"></div>
+      <div class="hint center">Você seguiu a maioria?</div>
+      <div class="reveal-btns">
+        <button class="btn btn-primary" id="btn-majority">✓ Na maioria</button>
+        <button class="btn btn-danger" id="btn-outlier">✗ Fora</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-history" class="screen">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h2 class="title" style="font-size:1.4rem">Histórico</h2>
+      <button class="btn btn-small" id="btn-history-back">Voltar</button>
+    </div>
+    <div class="history-list" id="history-list"></div>
+  </div>
+
+  <div id="screen-end" class="screen">
+    <div class="center" style="padding:1rem 0">
+      <h1 class="title">Fim de jogo</h1>
+      <p class="subtitle" id="end-name"></p>
+    </div>
+    <div class="card center">
+      <div class="penalty-label">Penalidades</div>
+      <div class="penalty-big" id="end-penalty"></div>
+      <div class="hint" id="end-of-total"></div>
+    </div>
+    <div class="card center">
+      <div class="end-flavor" id="end-flavor"></div>
+      <div class="hint" id="end-flavor-sub"></div>
+    </div>
+    <div class="history-list" id="end-history-list"></div>
+    <div class="row gap-075">
+      <button class="btn btn-ghost" style="flex:1" id="btn-end-history">Histórico</button>
+      <button class="btn btn-primary" style="flex:1" id="btn-new-game">Novo jogo</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// --- PRNG ---
+function xoshiro128ss(seed) {
+  const s = new Uint32Array([seed ^ 0xDEADBEEF, seed ^ 0xCAFEBABE, seed ^ 0x12345678, seed ^ 0x87654321]);
+  const rotl = (x, k) => ((x << k) | (x >>> (32 - k))) >>> 0;
+  return () => {
+    const result = (rotl((s[1] * 5) >>> 0, 7) * 9) >>> 0;
+    const t = (s[1] << 9) >>> 0;
+    s[2] ^= s[0]; s[3] ^= s[1]; s[1] ^= s[2]; s[0] ^= s[3];
+    s[2] ^= t; s[3] = rotl(s[3], 11);
+    return result / 4294967296;
+  };
+}
+function hashSeed(str) { let h = 0; for (let i = 0; i < str.length; i++) h = ((h << 5) - h + str.charCodeAt(i)) | 0; return h; }
+function shuffle(arr, rng) { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+// --- Categories & Questions ---
+const CATEGORIES = [
+  { id: "comida", label: "Comida" },
+  { id: "cotidiano", label: "Cotidiano" },
+  { id: "cultura", label: "Cultura" },
+  { id: "hipotetico", label: "Hipotéticos" },
+  { id: "opiniao", label: "Opinião" },
+  { id: "social", label: "Social" },
+  { id: "associacao", label: "Associação" },
+];
+
+const QUESTIONS = [{"c":"comida","q":"Melhor sabor de pizza"},{"c":"comida","q":"Melhor fruta"},{"c":"comida","q":"Melhor comida de boteco"},{"c":"comida","q":"Melhor sabor de sorvete"},{"c":"comida","q":"Melhor comida de festa junina"},{"c":"comida","q":"Melhor refrigerante"},{"c":"comida","q":"Melhor tipo de café"},{"c":"comida","q":"Pior comida de avião"},{"c":"comida","q":"Melhor sabor de bolo"},{"c":"comida","q":"Melhor comida pra ressaca"},{"c":"comida","q":"Melhor suco natural"},{"c":"comida","q":"Melhor comida de rua"},{"c":"comida","q":"Melhor queijo"},{"c":"comida","q":"Melhor tempero"},{"c":"comida","q":"Melhor comida pra comer no frio"},{"c":"comida","q":"Pior sabor de pizza"},{"c":"comida","q":"Melhor petisco pra ver jogo"},{"c":"comida","q":"Melhor chá"},{"c":"comida","q":"Melhor comida mineira"},{"c":"comida","q":"Melhor recheio de pastel"},{"c":"comida","q":"Melhor sabor de miojo"},{"c":"comida","q":"Melhor fruta pra suco"},{"c":"comida","q":"Pior comida de hospital"},{"c":"comida","q":"Melhor doce de festa de criança"},{"c":"comida","q":"Melhor molho"},{"c":"comida","q":"Melhor recheio de coxinha"},{"c":"comida","q":"Melhor prato pra comer sozinho"},{"c":"comida","q":"Melhor comida de aniversário"},{"c":"comida","q":"Melhor lanche da padaria"},{"c":"comida","q":"Melhor bebida quente"},{"c":"comida","q":"Pior verdura"},{"c":"comida","q":"Melhor comida pra levar na marmita"},{"c":"comida","q":"Melhor sabor de açaí"},{"c":"comida","q":"Melhor comida japonesa"},{"c":"comida","q":"Melhor petisco de bar"},{"c":"comida","q":"Melhor cerveja pra churrasco"},{"c":"cotidiano","q":"Melhor dia da semana"},{"c":"cotidiano","q":"Pior dia da semana"},{"c":"cotidiano","q":"Melhor estação do ano"},{"c":"cotidiano","q":"Coisa mais irritante no trânsito"},{"c":"cotidiano","q":"Melhor lugar da casa"},{"c":"cotidiano","q":"Pior tarefa doméstica"},{"c":"cotidiano","q":"Melhor hora do dia"},{"c":"cotidiano","q":"Coisa mais inútil que todo mundo tem em casa"},{"c":"cotidiano","q":"Melhor desculpa pra chegar atrasado"},{"c":"cotidiano","q":"Pior coisa de acordar cedo"},{"c":"cotidiano","q":"Melhor coisa de domingo"},{"c":"cotidiano","q":"Pior barulho do mundo"},{"c":"cotidiano","q":"Melhor cheiro do mundo"},{"c":"cotidiano","q":"Coisa que todo mundo faz mas ninguém admite"},{"c":"cotidiano","q":"Melhor lugar pra tirar soneca"},{"c":"cotidiano","q":"Pior coisa de morar em apartamento"},{"c":"cotidiano","q":"Coisa mais irritante numa fila"},{"c":"cotidiano","q":"Melhor coisa de feriado prolongado"},{"c":"cotidiano","q":"Pior coisa de segunda-feira"},{"c":"cotidiano","q":"Melhor coisa de sexta-feira"},{"c":"cotidiano","q":"Pior cheiro do mundo"},{"c":"cotidiano","q":"Coisa que sempre esquece de comprar no mercado"},{"c":"cotidiano","q":"Melhor coisa de morar sozinho"},{"c":"cotidiano","q":"Pior coisa de morar sozinho"},{"c":"cotidiano","q":"Coisa que todo mundo mente sobre"},{"c":"cotidiano","q":"Melhor barulho do mundo"},{"c":"cotidiano","q":"Pior coisa de pegar ônibus"},{"c":"cotidiano","q":"Melhor motivo pra faltar no trabalho"},{"c":"cotidiano","q":"Coisa que mais dá preguiça de fazer"},{"c":"cotidiano","q":"Melhor coisa de dia de chuva"},{"c":"cotidiano","q":"Pior coisa de dia de calor"},{"c":"cotidiano","q":"Coisa que todo mundo finge que sabe fazer"},{"c":"cotidiano","q":"Melhor hora pra tomar banho"},{"c":"cotidiano","q":"Pior lugar pra ficar sem celular"},{"c":"cotidiano","q":"Coisa que sempre atrasa sua saída de casa"},{"c":"cultura","q":"Melhor filme de todos os tempos"},{"c":"cultura","q":"Melhor série pra maratonar"},{"c":"cultura","q":"Melhor gênero de música"},{"c":"cultura","q":"Melhor super-herói"},{"c":"cultura","q":"Melhor vilão de filme"},{"c":"cultura","q":"Melhor desenho animado"},{"c":"cultura","q":"Melhor jogo de tabuleiro"},{"c":"cultura","q":"Melhor jogo de videogame"},{"c":"cultura","q":"Melhor banda brasileira"},{"c":"cultura","q":"Melhor estilo de dança"},{"c":"cultura","q":"Melhor livro pra ler na praia"},{"c":"cultura","q":"Melhor filme pra ver em família"},{"c":"cultura","q":"Pior gênero de filme"},{"c":"cultura","q":"Melhor música pra cantar no karaokê"},{"c":"cultura","q":"Melhor programa de TV da infância"},{"c":"cultura","q":"Melhor filme de animação"},{"c":"cultura","q":"Melhor cantor brasileiro"},{"c":"cultura","q":"Melhor cantora brasileira"},{"c":"cultura","q":"Melhor novela de todos os tempos"},{"c":"cultura","q":"Melhor personagem de filme"},{"c":"cultura","q":"Melhor música pra ouvir triste"},{"c":"cultura","q":"Melhor música pra ouvir feliz"},{"c":"cultura","q":"Melhor esporte pra praticar"},{"c":"cultura","q":"Melhor esporte pra assistir"},{"c":"cultura","q":"Pior esporte que existe"},{"c":"cultura","q":"Melhor console de videogame"},{"c":"cultura","q":"Melhor rede social"},{"c":"cultura","q":"Pior rede social"},{"c":"cultura","q":"Melhor filme de terror"},{"c":"cultura","q":"Melhor filme de comédia"},{"c":"cultura","q":"Melhor apresentador de TV brasileiro"},{"c":"hipotetico","q":"Melhor superpoder"},{"c":"hipotetico","q":"Pior superpoder"},{"c":"hipotetico","q":"Animal que você seria se pudesse escolher"},{"c":"hipotetico","q":"Se pudesse jantar com uma pessoa da história, quem"},{"c":"hipotetico","q":"Melhor época pra ter vivido"},{"c":"hipotetico","q":"Profissão mais legal que existe"},{"c":"hipotetico","q":"Profissão que você nunca faria"},{"c":"hipotetico","q":"Se ganhasse na loteria, primeira coisa que comprava"},{"c":"hipotetico","q":"Lugar do mundo que mais quer conhecer"},{"c":"hipotetico","q":"Pior coisa de ser invisível"},{"c":"hipotetico","q":"Se fosse um instrumento musical, qual seria"},{"c":"hipotetico","q":"Coisa que inventariam se não existisse"},{"c":"hipotetico","q":"Se pudesse ter um talento instantâneo, qual seria"},{"c":"hipotetico","q":"Pior animal pra ter de estimação"},{"c":"hipotetico","q":"Se pudesse morar em qualquer país, qual"},{"c":"hipotetico","q":"Se fosse um personagem de ficção, quem seria"},{"c":"hipotetico","q":"Se pudesse voltar no tempo, pra qual década"},{"c":"hipotetico","q":"Se só pudesse comer uma comida pro resto da vida, qual"},{"c":"hipotetico","q":"Objeto que levaria pra uma ilha deserta"},{"c":"hipotetico","q":"Se pudesse falar com um animal, qual escolheria"},{"c":"hipotetico","q":"Se tivesse uma máquina do tempo, iria pro futuro ou passado"},{"c":"hipotetico","q":"Melhor profissão pra um apocalipse zumbi"},{"c":"hipotetico","q":"Se pudesse ter qualquer carro, qual"},{"c":"hipotetico","q":"Coisa mais inútil que adoraria ter"},{"c":"hipotetico","q":"Se fosse presidente por um dia, primeira coisa que faria"},{"c":"hipotetico","q":"Se pudesse aprender qualquer idioma instantaneamente, qual"},{"c":"opiniao","q":"Melhor estado do Brasil"},{"c":"opiniao","q":"Melhor feriado do ano"},{"c":"opiniao","q":"Melhor invenção da humanidade"},{"c":"opiniao","q":"Pior invenção da humanidade"},{"c":"opiniao","q":"Coisa mais superestimada"},{"c":"opiniao","q":"Coisa mais subestimada"},{"c":"opiniao","q":"Melhor idade pra estar vivo"},{"c":"opiniao","q":"Melhor cor"},{"c":"opiniao","q":"Palavra mais bonita em português"},{"c":"opiniao","q":"Melhor mês do ano"},{"c":"opiniao","q":"Pior mês do ano"},{"c":"opiniao","q":"Melhor forma de transporte"},{"c":"opiniao","q":"Coisa que deveria ser proibida"},{"c":"opiniao","q":"Coisa que deveria ser obrigatória"},{"c":"opiniao","q":"Coisa que só brasileiro entende"},{"c":"opiniao","q":"Melhor cidade do Brasil pra morar"},{"c":"opiniao","q":"Pior dia do ano"},{"c":"opiniao","q":"Melhor estilo de roupa"},{"c":"opiniao","q":"Coisa que todo adulto deveria saber fazer"},{"c":"opiniao","q":"Melhor matéria da escola"},{"c":"opiniao","q":"Pior matéria da escola"},{"c":"opiniao","q":"Melhor década de todos os tempos"},{"c":"opiniao","q":"Melhor festa do Brasil"},{"c":"opiniao","q":"Coisa que o Brasil faz melhor que qualquer país"},{"c":"opiniao","q":"Maior mentira que todo mundo conta"},{"c":"opiniao","q":"Coisa mais bonita do mundo"},{"c":"opiniao","q":"Coisa mais chata que existe"},{"c":"opiniao","q":"Melhor praia do Brasil"},{"c":"opiniao","q":"Melhor frase de para-choque de caminhão"},{"c":"social","q":"Melhor qualidade numa pessoa"},{"c":"social","q":"Pior defeito numa pessoa"},{"c":"social","q":"Melhor presente pra dar"},{"c":"social","q":"Pior presente pra receber"},{"c":"social","q":"Melhor assunto de conversa"},{"c":"social","q":"Pior assunto pra ceia de natal"},{"c":"social","q":"Melhor tipo de festa"},{"c":"social","q":"Coisa mais constrangedora que existe"},{"c":"social","q":"Melhor jeito de pedir desculpa"},{"c":"social","q":"Melhor elogio que alguém pode receber"},{"c":"social","q":"Melhor nome pra um cachorro"},{"c":"social","q":"Pior nome pra um filho"},{"c":"social","q":"Coisa que todo mundo deveria aprender"},{"c":"social","q":"Melhor programa pra dia de chuva"},{"c":"social","q":"Pior coisa de dividir apartamento"},{"c":"social","q":"Melhor desculpa pra cancelar planos"},{"c":"social","q":"Coisa mais irritante que alguém pode fazer no cinema"},{"c":"social","q":"Pior pergunta que parente faz no natal"},{"c":"social","q":"Melhor jeito de conhecer gente nova"},{"c":"social","q":"Coisa que mais causa briga entre amigos"},{"c":"social","q":"Melhor plano pra primeiro encontro"},{"c":"social","q":"Pior lugar pra um primeiro encontro"},{"c":"social","q":"Coisa que mais irrita num colega de trabalho"},{"c":"social","q":"Melhor jeito de terminar uma conversa chata"},{"c":"social","q":"Coisa que todo mundo faz em grupo mas ninguém gosta"},{"c":"social","q":"Melhor qualidade num chefe"},{"c":"social","q":"Pior tipo de vizinho"},{"c":"associacao","q":"Primeira coisa que vem na cabeça: Brasil"},{"c":"associacao","q":"Primeira coisa que vem na cabeça: segunda-feira"},{"c":"associacao","q":"Primeira coisa que vem na cabeça: infância"},{"c":"associacao","q":"Primeira coisa que vem na cabeça: praia"},{"c":"associacao","q":"Primeira coisa que vem na cabeça: natal"},{"c":"associacao","q":"Primeira coisa que vem na cabeça: dinheiro"},{"c":"associacao","q":"Primeira coisa que vem na cabeça: futuro"},{"c":"associacao","q":"Primeira coisa que vem na cabeça: escola"},{"c":"associacao","q":"Primeira coisa que vem na cabeça: amor"},{"c":"associacao","q":"Primeira coisa que vem na cabeça: avião"},{"c":"associacao","q":"Primeira coisa que vem na cabeça: verde"},{"c":"associacao","q":"Primeira coisa que vem na cabeça: hospital"},{"c":"associacao","q":"Um famoso que todo mundo conhece"},{"c":"associacao","q":"Uma cidade que todo mundo quer visitar"},{"c":"associacao","q":"Um bicho que todo mundo tem medo"},{"c":"associacao","q":"Uma música que todo mundo sabe cantar"},{"c":"associacao","q":"Uma marca que todo mundo conhece"},{"c":"associacao","q":"Um filme que todo mundo já viu"},{"c":"associacao","q":"Um nome de homem muito comum"},{"c":"associacao","q":"Um nome de mulher muito comum"}];
+
+// --- Seed words ---
+const SEED_WORDS = [
+  "abacaxi","amarelo","baleia","banana","bigode","bolha","brasa","cacto","caju","caneta",
+  "castelo","chuva","coelho","cometa","dado","dragao","elefante","escada","estrela","faisca",
+  "farol","flauta","foguete","galinha","garrafa","girafa","goiaba","grilo","harpa","ilha",
+  "janela","jardim","lagarto","lampada","laranja","leitao","limao","lua","macaco","mangueira",
+  "martelo","melancia","moeda","nuvem","oceano","olho","onca","ovelha","panela","papagaio",
+  "pato","pedra","piano","pipoca","prata","queijo","raio","raposa","relogio","rio","roda",
+  "samba","sapo","selva","sino","sol","tambor","tapete","tartaruga","tigre","tomate","trovao",
+  "tucano","uva","vagalume","vampiro","veleiro","ventania","violao","vulcao","xadrez","zebra",
+];
+function randomSeed() { const p = () => SEED_WORDS[Math.floor(Math.random() * SEED_WORDS.length)]; return p()+" "+p()+" "+p(); }
+
+// --- Fragment codec ---
+function catBitmask(activeCats) { let m = 0; CATEGORIES.forEach((c,i) => { if (activeCats.has(c.id)) m |= (1<<i); }); return m; }
+function catsFromBitmask(mask) { const s = new Set(); CATEGORIES.forEach((c,i) => { if (mask & (1<<i)) s.add(c.id); }); return s; }
+function allCatsMask() { return (1 << CATEGORIES.length) - 1; }
+
+async function compressText(text) {
+  const buf = new TextEncoder().encode(text);
+  const cs = new CompressionStream("deflate-raw");
+  const w = cs.writable.getWriter(); w.write(buf); w.close();
+  const chunks = []; const r = cs.readable.getReader();
+  while (true) { const { done, value } = await r.read(); if (done) break; chunks.push(value); }
+  const out = new Uint8Array(chunks.reduce((a,c) => a+c.length, 0));
+  let off = 0; for (const c of chunks) { out.set(c, off); off += c.length; }
+  return btoa(String.fromCharCode(...out)).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+
+async function decompressText(b64url) {
+  let b64 = b64url.replace(/-/g,"+").replace(/_/g,"/");
+  while (b64.length % 4) b64 += "=";
+  const bin = atob(b64); const buf = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+  const ds = new DecompressionStream("deflate-raw");
+  const w = ds.writable.getWriter(); w.write(buf); w.close();
+  const chunks = []; const r = ds.readable.getReader();
+  while (true) { const { done, value } = await r.read(); if (done) break; chunks.push(value); }
+  const out = new Uint8Array(chunks.reduce((a,c) => a+c.length, 0));
+  let off = 0; for (const c of chunks) { out.set(c, off); off += c.length; }
+  return new TextDecoder().decode(out);
+}
+
+async function encodeFragment(seed, activeCats, customPrompts) {
+  const mask = catBitmask(activeCats);
+  let frag = encodeURIComponent(seed) + "|" + mask;
+  if (customPrompts.length > 0) frag += "|" + await compressText(customPrompts.join("\n"));
+  return frag;
+}
+
+async function decodeFragment(hash) {
+  const result = { seed: "", cats: null, custom: [] };
+  if (!hash) return result;
+  const raw = hash.startsWith("#") ? hash.slice(1) : hash;
+  const parts = raw.split("|");
+  if (parts[0]) result.seed = decodeURIComponent(parts[0]);
+  if (parts[1] !== undefined) { const m = parseInt(parts[1],10); if (!isNaN(m)) result.cats = catsFromBitmask(m); }
+  if (parts[2]) { try { const t = await decompressText(parts[2]); result.custom = t.split("\n").filter(l=>l.trim()); } catch(e){} }
+  return result;
+}
+
+// --- State ---
+let state = {
+  name: "", seed: "", rounds: 15, round: 0, penalty: 0,
+  answer: "", lockedAnswer: "", history: [], questions: [], prevScreen: null,
+  activeCats: new Set(CATEGORIES.map(c => c.id)), customPrompts: [],
+};
+const ROUND_OPTIONS = [10, 15, 20, 30];
+
+// --- DOM ---
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+function showScreen(id) { $$(".screen").forEach(s => s.classList.remove("active")); $("#screen-"+id).classList.add("active"); }
+function esc(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+function renderHeader(id) {
+  const el = $("#"+id), pc = state.penalty > 0 ? "dirty" : "clean";
+  el.innerHTML = '<div><div class="header-name">'+esc(state.name)+'</div><div class="header-round">'+
+    (state.round+1)+"/"+state.rounds+'</div></div><div style="text-align:right;cursor:pointer" onclick="goHistory()">'+
+    '<div class="header-penalty '+pc+'">'+state.penalty+'</div><div class="header-penalty-label">penalidades</div></div>';
+}
+function getActiveCount() { return QUESTIONS.filter(q => state.activeCats.has(q.c)).length + state.customPrompts.length; }
+function updateCount() { $("#prompt-count").textContent = getActiveCount() + " perguntas no baralho"; }
+function addQ(text) { const t = text.trim(); return /[?!.]$/.test(t) ? t : t + "?"; }
+
+// --- Setup ---
+async function initSetup() {
+  const frag = await decodeFragment(window.location.hash);
+  if (frag.seed && !state.seed) state.seed = frag.seed;
+  if (frag.cats) state.activeCats = frag.cats;
+  if (frag.custom.length > 0) state.customPrompts = frag.custom;
+
+  const chips = $("#round-chips"); chips.innerHTML = "";
+  ROUND_OPTIONS.forEach(n => {
+    const c = document.createElement("div");
+    c.className = "chip" + (state.rounds === n ? " active" : ""); c.textContent = n;
+    c.onclick = () => { state.rounds = n; chips.querySelectorAll(".chip").forEach(ch => ch.classList.remove("active")); c.classList.add("active"); };
+    chips.appendChild(c);
+  });
+
+  const catC = $("#cat-chips"); catC.innerHTML = "";
+  CATEGORIES.forEach(cat => {
+    const c = document.createElement("div");
+    c.className = "cat-chip" + (state.activeCats.has(cat.id) ? " active" : ""); c.textContent = cat.label;
+    c.onclick = () => {
+      if (state.activeCats.has(cat.id)) {
+        if (state.activeCats.size <= 1 && state.customPrompts.length === 0) return;
+        state.activeCats.delete(cat.id); c.classList.remove("active");
+      } else { state.activeCats.add(cat.id); c.classList.add("active"); }
+      updateCount();
+    };
+    catC.appendChild(c);
+  });
+
+  const customTA = $("#input-custom");
+  customTA.value = state.customPrompts.join("\n");
+  customTA.oninput = () => { state.customPrompts = customTA.value.split("\n").filter(l => l.trim()); updateCount(); };
+
+  const nameInput = $("#input-name"), seedInput = $("#input-seed"), startBtn = $("#btn-start");
+  nameInput.value = state.name; seedInput.value = state.seed;
+  nameInput.oninput = () => { state.name = nameInput.value; startBtn.disabled = !nameInput.value.trim(); };
+  nameInput.onkeydown = e => { if (e.key === "Enter") startGame(); };
+  seedInput.oninput = e => { state.seed = e.target.value; };
+  startBtn.disabled = !state.name.trim(); startBtn.onclick = startGame;
+
+  $("#btn-random-seed").onclick = () => { const s = randomSeed(); state.seed = s; seedInput.value = s; };
+  $("#btn-share-seed").onclick = async () => {
+    const s = (state.seed || seedInput.value).trim() || randomSeed();
+    state.seed = s; seedInput.value = s;
+    const f = await encodeFragment(s, state.activeCats, state.customPrompts);
+    const url = window.location.origin + window.location.pathname + "#" + f;
+    history.replaceState(null, "", "#" + f);
+    if (navigator.share) navigator.share({ title: "Lugar Comum", text: "Semente: " + s, url }).catch(()=>{});
+    else if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => showToast("Link copiado!"));
+  };
+
+  if (state.customPrompts.length > 0) { $("#custom-toggle").classList.add("open"); $("#custom-body").classList.add("open"); }
+  updateCount();
+}
+
+function showToast(msg) {
+  const h = $("#seed-hint"), orig = h.textContent;
+  h.textContent = msg; h.style.color = "var(--success)";
+  setTimeout(() => { h.textContent = orig; h.style.color = ""; }, 2000);
+}
+
+async function startGame() {
+  if (!state.name.trim()) return;
+  const seed = state.seed.trim() || randomSeed();
+  state.seed = seed; $("#input-seed").value = seed;
+  const f = await encodeFragment(seed, state.activeCats, state.customPrompts);
+  history.replaceState(null, "", "#" + f);
+  state.round = 0; state.penalty = 0; state.answer = ""; state.lockedAnswer = ""; state.history = [];
+  const base = QUESTIONS.filter(q => state.activeCats.has(q.c)).map(q => q.q);
+  const all = [...base, ...state.customPrompts];
+  const rng = xoshiro128ss(hashSeed(seed));
+  state.questions = shuffle(all, rng).slice(0, state.rounds);
+  goQuestion();
+}
+
+// --- Game flow ---
+function goQuestion() {
+  showScreen("question"); renderHeader("header-question");
+  $("#q-round-badge").textContent = "Pergunta " + (state.round+1) + " de " + state.rounds;
+  $("#q-text").textContent = addQ(state.questions[state.round]);
+  const ai = $("#input-answer"); ai.value = ""; state.answer = ""; $("#btn-lock").disabled = true;
+  ai.oninput = () => { state.answer = ai.value; $("#btn-lock").disabled = !ai.value.trim(); };
+  ai.onkeydown = e => { if (e.key === "Enter") lockAnswer(); };
+  $("#btn-lock").onclick = lockAnswer;
+  setTimeout(() => ai.focus(), 50);
+}
+
+function lockAnswer() {
+  if (!state.answer.trim()) return;
+  state.lockedAnswer = state.answer.trim();
+  showScreen("locked"); renderHeader("header-locked");
+  $("#btn-reveal").onclick = goReveal;
+}
+
+function goReveal() {
+  showScreen("reveal"); renderHeader("header-reveal");
+  $("#reveal-answer").textContent = state.lockedAnswer;
+  $("#btn-majority").onclick = () => markResult(true);
+  $("#btn-outlier").onclick = () => markResult(false);
+}
+
+function markResult(inMajority) {
+  if (!inMajority) state.penalty++;
+  state.history.push({ question: state.questions[state.round], answer: state.lockedAnswer, inMajority });
+  state.round++;
+  if (state.round >= state.rounds) goEnd();
+  else { state.answer = ""; state.lockedAnswer = ""; goQuestion(); }
+}
+
+// --- History ---
+function goHistory() {
+  state.prevScreen = document.querySelector(".screen.active")?.id?.replace("screen-","") || "question";
+  showScreen("history"); renderHistoryList("history-list");
+  $("#btn-history-back").onclick = () => {
+    if (state.prevScreen === "end" || state.round >= state.rounds) goEnd();
+    else showScreen(state.prevScreen);
+  };
+}
+
+function renderHistoryList(id) {
+  const el = $("#"+id);
+  if (!state.history.length) { el.innerHTML = '<div class="card center" style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.8rem">Nenhuma rodada ainda.</div>'; return; }
+  el.innerHTML = state.history.map(h => {
+    const cls = h.inMajority ? "majority" : "outlier";
+    return '<div class="history-item '+cls+'"><div style="flex:1;min-width:0"><div class="history-q">'+esc(addQ(h.question))+
+      '</div><div class="history-a">'+esc(h.answer)+'</div></div><div class="history-mark '+cls+'">'+(h.inMajority?"✓":"✗")+'</div></div>';
+  }).join("");
+}
+
+// --- End ---
+function goEnd() {
+  showScreen("end"); $("#end-name").textContent = state.name;
+  $("#end-penalty").textContent = state.penalty;
+  $("#end-of-total").textContent = "de " + state.rounds + " rodadas";
+  const r = state.penalty / state.rounds;
+  let fl, fc, sub;
+  if (state.penalty === 0) { fl="Lugar comum perfeito."; fc="var(--success)"; sub="Ninguém é tão previsível."; }
+  else if (r <= 0.2) { fl="Quase na maioria total."; fc="var(--accent)"; sub="Compare com os outros jogadores!"; }
+  else if (r <= 0.4) { fl="Dentro da média."; fc="var(--accent)"; sub="Compare com os outros jogadores!"; }
+  else if (r <= 0.6) { fl="Um pouco original demais."; fc="var(--danger)"; sub="Compare com os outros jogadores!"; }
+  else { fl="Você é a pessoa mais original da mesa."; fc="var(--danger)"; sub="Isso não é um elogio."; }
+  const fe = $("#end-flavor"); fe.textContent = fl; fe.style.color = fc;
+  $("#end-flavor-sub").textContent = sub;
+  renderHistoryList("end-history-list");
+  $("#btn-end-history").onclick = goHistory;
+  $("#btn-new-game").onclick = () => {
+    state.round=0; state.penalty=0; state.answer=""; state.lockedAnswer=""; state.history=[];
+    showScreen("setup"); initSetup();
+  };
+}
+
+// --- Boot ---
+initSetup();
+document.querySelectorAll(".instructions-toggle, .collapse-toggle").forEach(el => {
+  el.onclick = () => { el.classList.toggle("open"); el.nextElementSibling.classList.toggle("open"); };
+});
+</script>
+</body>
+</html>

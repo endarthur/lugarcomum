@@ -1,0 +1,9 @@
+{
+  "name": "lugarcomum",
+  "version": "1.0.0",
+  "description": "Lugar Comum — jogo de festa offline onde o objetivo é ser óbvio",
+  "private": true,
+  "scripts": {
+    "build": "node build.js"
+  }
+}
