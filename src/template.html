@@ -13,7 +13,10 @@
 <meta name="twitter:title" content="Lugar Comum">
 <meta name="twitter:description" content="O jogo de ser óbvio">
 <meta name="twitter:image" content="card.png">
+<meta name="theme-color" content="#0e1012">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230e1012'/><text x='16' y='22' font-size='18' text-anchor='middle' fill='%23c08028'>LC</text></svg>">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -713,5 +716,6 @@ document.querySelectorAll(".instructions-toggle, .collapse-toggle").forEach(el =
   el.onclick = () => { el.classList.toggle("open"); el.nextElementSibling.classList.toggle("open"); };
 });
 </script>
+<script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");</script>
 </body>
 </html>
